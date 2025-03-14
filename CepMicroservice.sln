@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CepMicroservice", "CepMicroservice\CepMicroservice.csproj", "{DC9259D6-8CBA-483C-B355-AB44186E686B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DC9259D6-8CBA-483C-B355-AB44186E686B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC9259D6-8CBA-483C-B355-AB44186E686B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC9259D6-8CBA-483C-B355-AB44186E686B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC9259D6-8CBA-483C-B355-AB44186E686B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0DF3819E-4037-47E0-9296-E72F4237AC97}
+	EndGlobalSection
+EndGlobal
