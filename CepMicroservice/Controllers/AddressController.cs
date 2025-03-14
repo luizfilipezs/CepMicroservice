@@ -19,7 +19,7 @@ namespace CepMicroservice.Controllers
             var address = await _addressService.GetByCepAsync(cep);
             if (address != null) return Ok(address);
 
-            address = await _correiosApiService.GetAddressFromCorreiosAsync(cep);
+            address = await _correiosApiService.GetAddressByCepAsync(cep);
             if (address == null) return NotFound();
 
             await _addressService.SaveAsync(address);

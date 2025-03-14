@@ -7,7 +7,7 @@ namespace CepMicroservice.Services
     {
         private readonly HttpClient _httpClient = httpClient;
 
-        public async Task<Address?> GetAddressFromCorreiosAsync(string cep)
+        public async Task<Address?> GetAddressByCepAsync(string cep)
         {
             var url = $"https://viacep.com.br/ws/{cep}/json/";
 
