@@ -1,8 +1,9 @@
-﻿using CepMicroservice.Models;
+﻿using CepMicroservice.Contracts.Services.Interfaces;
+using CepMicroservice.Models;
 
 namespace CepMicroservice.Services
 {
-    public class CorreiosApiService(HttpClient httpClient)
+    public class CorreiosApiService(HttpClient httpClient) : ICorreiosApiService
     {
         private readonly HttpClient _httpClient = httpClient;
 

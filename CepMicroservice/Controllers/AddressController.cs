@@ -1,4 +1,4 @@
-﻿using CepMicroservice.Services;
+﻿using CepMicroservice.Contracts.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 
@@ -6,10 +6,10 @@ namespace CepMicroservice.Controllers
 {
     [ApiController]
     [Route("api/address")]
-    public class AddressController(AddressService addressService, CorreiosApiService correiosApiService) : ControllerBase
+    public class AddressController(IAdressService addressService, ICorreiosApiService correiosApiService) : ControllerBase
     {
-        private readonly AddressService _addressService = addressService;
-        private readonly CorreiosApiService _correiosApiService = correiosApiService;
+        private readonly IAdressService _addressService = addressService;
+        private readonly ICorreiosApiService _correiosApiService = correiosApiService;
 
         [HttpGet("{cep}")]
         public async Task<IActionResult> GetAddress(string cep)

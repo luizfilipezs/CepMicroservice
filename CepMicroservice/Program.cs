@@ -1,3 +1,4 @@
+using CepMicroservice.Contracts.Services.Interfaces;
 using CepMicroservice.Data;
 using CepMicroservice.Services;
 using Microsoft.EntityFrameworkCore;
@@ -5,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<HttpClient>();
-builder.Services.AddScoped<CorreiosApiService>();
-builder.Services.AddScoped<AddressService>();
+builder.Services.AddScoped<ICorreiosApiService, CorreiosApiService>();
+builder.Services.AddScoped<IAdressService, AddressService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=cepdb.sqlite"));

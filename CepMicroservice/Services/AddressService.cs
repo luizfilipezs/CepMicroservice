@@ -1,11 +1,12 @@
 ﻿using System.Text.RegularExpressions;
+using CepMicroservice.Contracts.Services.Interfaces;
 using CepMicroservice.Data;
 using CepMicroservice.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CepMicroservice.Services
 {
-    public class AddressService(AppDbContext context)
+    public class AddressService(AppDbContext context) : IAdressService
     {
         private readonly AppDbContext _context = context;
 
