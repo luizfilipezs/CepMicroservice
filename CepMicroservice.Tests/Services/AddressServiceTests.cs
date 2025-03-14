@@ -3,7 +3,7 @@ using CepMicroservice.Models;
 using CepMicroservice.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace CepMicroservice.Tests;
+namespace CepMicroservice.Tests.Services;
 
 [TestClass]
 public sealed class AddressServiceTests

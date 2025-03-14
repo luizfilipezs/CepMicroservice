@@ -4,7 +4,7 @@ using Moq;
 using Moq.Protected;
 using System.Net;
 
-namespace CepMicroservice.Tests;
+namespace CepMicroservice.Tests.Services;
 
 [TestClass]
 public sealed class CorreiosApiServiceTests
