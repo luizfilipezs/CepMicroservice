@@ -14,8 +14,6 @@ namespace CepMicroservice.Controllers
         [HttpGet("{cep}")]
         public async Task<IActionResult> GetAddress(string cep)
         {
-            cep = Regex.Replace(cep, @"\D", ""); // keep only digits
-
             var address = await _addressService.GetByCepAsync(cep);
             if (address != null) return Ok(address);
 
