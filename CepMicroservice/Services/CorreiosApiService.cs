@@ -1,23 +1,26 @@
-﻿using System.Text.Json;
-using CepMicroservice.Contracts.Services.Interfaces;
+﻿using CepMicroservice.Contracts.Services.Interfaces;
 using CepMicroservice.Models;
 
 namespace CepMicroservice.Services
 {
-    public class CorreiosApiService(HttpClient httpClient) : ICorreiosApiService
+    public class CorreiosApiService : ICorreiosApiService
     {
-        private readonly HttpClient _httpClient = httpClient;
+        private readonly HttpClient _httpClient;
+        private readonly IJsonService _jsonService;
+
+        public CorreiosApiService(HttpClient httpClient, IJsonService jsonService)
+        {
+            _httpClient = httpClient;
+            _jsonService = jsonService;
+
+            _httpClient.BaseAddress = new Uri("https://viacep.com.br/ws/");
+        }
 
         public async Task<Address?> GetAddressByCepAsync(string cep)
         {
-            var url = $"https://viacep.com.br/ws/{cep}/json/";
-
             try
             {
-                var response = await _httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-
-                return await ParseJsonResponseAsync<Address>(response);
+                return await GetAsJsonAsync<Address>(cep);
             }
             catch (Exception)
             {
@@ -25,24 +28,32 @@ namespace CepMicroservice.Services
             }
         }
 
-        private static async Task<T> ParseJsonResponseAsync<T>(HttpResponseMessage response)
+        private async Task<T> GetAsJsonAsync<T>(string uri)
         {
-            var jsonString = await response.Content.ReadAsStringAsync();
+            var response = await GetAsync<HttpResponseMessage>(uri + "/json/");
+            return await ParseJsonResponse<T>(response);
+        }
 
-            if (string.IsNullOrWhiteSpace(jsonString))
-            {
-                throw new Exception("O conteúdo da resposta está vazio.");
-            }
+        private async Task<HttpResponseMessage> GetAsync<T>(string uri)
+        {
+            var response = await _httpClient.GetAsync(uri);
+            response.EnsureSuccessStatusCode();
 
-            using var jsonDocument = JsonDocument.Parse(jsonString);
+            return response;
+        }
+
+        private async Task<T> ParseJsonResponse<T>(HttpResponseMessage response)
+        {
+            var jsonString = await _jsonService.GetJsonStringFromHttpResponseAsync(response);
+            using var jsonDocument = _jsonService.GetJsonDocumentFromString(jsonString);
 
             if (jsonDocument.RootElement.TryGetProperty("erro", out var errorProperty))
             {
                 var errorMessage = errorProperty.GetString();
-                throw new Exception($"Erro no JSON: {errorMessage}");
+                throw new Exception("Response body has error entry: " + errorMessage);
             }
 
-            return jsonDocument.RootElement.Deserialize<T>() ?? throw new Exception("O objeto desserializado é nulo.");
+            return _jsonService.DeserializeJsonElementAs<T>(jsonDocument.RootElement);
         }
     }
 }

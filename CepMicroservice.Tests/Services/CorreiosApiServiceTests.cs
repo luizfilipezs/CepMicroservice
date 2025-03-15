@@ -1,176 +1,248 @@
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using CepMicroservice.Contracts.Services.Interfaces;
+using CepMicroservice.Exceptions;
 using CepMicroservice.Models;
 using CepMicroservice.Services;
 using Moq;
 using Moq.Protected;
-using System.Net;
-using System.Text.Json;
 
-namespace CepMicroservice.Tests.Services;
-
-[TestClass]
-[TestCategory("Unit")]
-public sealed class CorreiosApiServiceTests
+namespace CepMicroservice.Tests.Services
 {
-    [TestMethod]
-    public async Task GetAddressByCepAsync_ShouldReturnAddress_WhenCepIsValid()
+    [TestClass]
+    [TestCategory("Unit")]
+    public sealed class CorreiosApiServiceTests
     {
-        // Arrange
-        var cep = "12345678";
-        var expectedAddress = new Address
+        private Mock<HttpMessageHandler>? _httpMessageHandlerMock;
+        private HttpClient? _httpClient;
+        private Mock<IJsonService>? _jsonServiceMock;
+        private CorreiosApiService? _correiosApiService;
+
+        [TestInitialize]
+        public void Initialize()
         {
-            Cep = cep,
-            Logradouro = "Rua Teste",
-            Bairro = "Bairro Teste",
-            Cidade = "Cidade Teste",
-            Estado = "SP"
-        };
+            // Configura o mock do HttpMessageHandler
+            _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(new HttpResponseMessage
+            // Cria um HttpClient com o HttpMessageHandler mockado
+            _httpClient = new HttpClient(_httpMessageHandlerMock.Object);
+
+            // Configura o mock do IJsonService
+            _jsonServiceMock = new Mock<IJsonService>();
+
+            // Cria a instância do CorreiosApiService com os mocks
+            _correiosApiService = new CorreiosApiService(_httpClient, _jsonServiceMock.Object);
+        }
+
+        [TestMethod]
+        public async Task GetAddressByCepAsync_ReturnsAddress_WhenCepIsValid()
+        {
+            // Arrange
+            var cep = "01001000";
+            var expectedAddress = new Address
             {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(JsonSerializer.Serialize(expectedAddress))
-            });
+                Cep = "01001-000",
+                Logradouro = "Praça da Sé",
+                Bairro = "Sé",
+                Cidade = "São Paulo",
+                Estado = "São Paulo"
+            };
+            var jsonResponse = JsonSerializer.Serialize(expectedAddress);
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        var service = new CorreiosApiService(httpClient);
+            _httpMessageHandlerMock!
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                });
 
-        // Act
-        var result = await service.GetAddressByCepAsync(cep);
+            _jsonServiceMock!
+                .Setup(service => service.GetJsonStringFromHttpResponseAsync(It.IsAny<HttpResponseMessage>()))
+                .ReturnsAsync(jsonResponse);
 
-        // Assert
-        Assert.IsNotNull(result);
-        Assert.AreEqual(expectedAddress.Cep, result.Cep);
-        Assert.AreEqual(expectedAddress.Logradouro, result.Logradouro);
-        Assert.AreEqual(expectedAddress.Bairro, result.Bairro);
-        Assert.AreEqual(expectedAddress.Cidade, result.Cidade);
-        Assert.AreEqual(expectedAddress.Estado, result.Estado);
-    }
+            _jsonServiceMock
+                .Setup(service => service.GetJsonDocumentFromString(jsonResponse))
+                .Returns(JsonDocument.Parse(jsonResponse));
 
-    [TestMethod]
-    public async Task GetAddressByCepAsync_ShouldReturnNull_WhenCepIsInvalid()
-    {
-        // Arrange
-        var cep = "00000000";
+            _jsonServiceMock
+                .Setup(service => service.DeserializeJsonElementAs<Address>(It.IsAny<JsonElement>()))
+                .Returns(expectedAddress);
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.NotFound
-            });
+            // Act
+            var result = await _correiosApiService!.GetAddressByCepAsync(cep);
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        var service = new CorreiosApiService(httpClient);
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(expectedAddress.Cep, result.Cep);
+            Assert.AreEqual(expectedAddress.Logradouro, result.Logradouro);
+            Assert.AreEqual(expectedAddress.Bairro, result.Bairro);
+            Assert.AreEqual(expectedAddress.Cidade, result.Cidade);
+            Assert.AreEqual(expectedAddress.Estado, result.Estado);
+        }
 
-        // Act
-        var result = await service.GetAddressByCepAsync(cep);
+        [TestMethod]
+        public async Task GetAddressByCepAsync_ReturnsNull_WhenRequestFails()
+        {
+            // Arrange
+            var cep = "00000000";
 
-        // Assert
-        Assert.IsNull(result);
-    }
+            _httpMessageHandlerMock!
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ThrowsAsync(new HttpRequestException("Simulated error"));
 
-    [TestMethod]
-    public async Task GetAddressByCepAsync_ShouldReturnNull_WhenResponseIsEmpty()
-    {
-        // Arrange
-        var cep = "12345678";
+            // Act
+            var result = await _correiosApiService!.GetAddressByCepAsync(cep);
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent("")
-            });
+            // Assert
+            Assert.IsNull(result);
+        }
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        var service = new CorreiosApiService(httpClient);
+        [TestMethod]
+        public async Task GetAddressByCepAsync_ReturnsNull_WhenResponseHasErrorEntry()
+        {
+            // Arrange
+            var cep = "00000000";
+            var jsonResponse = "{\"erro\":true}";
 
-        // Act
-        var result = await service.GetAddressByCepAsync(cep);
+            _httpMessageHandlerMock!
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                });
 
-        // Assert
-        Assert.IsNull(result);
-    }
+            _jsonServiceMock!
+                .Setup(service => service.GetJsonStringFromHttpResponseAsync(It.IsAny<HttpResponseMessage>()))
+                .ReturnsAsync(jsonResponse);
 
-    [TestMethod]
-    public async Task GetAddressByCepAsync_ShouldReturnNull_WhenResponseContainsErrorKey()
-    {
-        // Arrange
-        var cep = "12345678";
-        var errorResponse = new { erro = true };
+            _jsonServiceMock
+                .Setup(service => service.GetJsonDocumentFromString(jsonResponse))
+                .Returns(JsonDocument.Parse(jsonResponse));
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(JsonSerializer.Serialize(errorResponse))
-            });
+            // Act
+            var result = await _correiosApiService!.GetAddressByCepAsync(cep);
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        var service = new CorreiosApiService(httpClient);
+            // Assert
+            Assert.IsNull(result);
+        }
 
-        // Act
-        var result = await service.GetAddressByCepAsync(cep);
+        [TestMethod]
+        public async Task GetAddressByCepAsync_ReturnsNull_WhenJsonIsInvalid()
+        {
+            // Arrange
+            var cep = "00000000";
+            var invalidJson = "invalid json";
 
-        // Assert
-        Assert.IsNull(result);
-    }
+            _httpMessageHandlerMock!
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(invalidJson, Encoding.UTF8, "application/json")
+                });
 
-    [TestMethod]
-    public async Task GetAddressByCepAsync_ShouldReturnNull_WhenResponseIsInvalidJson()
-    {
-        // Arrange
-        var cep = "12345678";
+            _jsonServiceMock!
+                .Setup(service => service.GetJsonStringFromHttpResponseAsync(It.IsAny<HttpResponseMessage>()))
+                .ThrowsAsync(new JsonServiceException("The response body is not a valid JSON string."));
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent("{ invalid_json: true }")
-            });
+            // Act
+            var result = await _correiosApiService!.GetAddressByCepAsync(cep);
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        var service = new CorreiosApiService(httpClient);
+            // Assert
+            Assert.IsNull(result);
+        }
 
-        // Act
-        var result = await service.GetAddressByCepAsync(cep);
+        [TestMethod]
+        public async Task GetAddressByCepAsync_ReturnsNull_WhenJsonIsEmpty()
+        {
+            // Arrange
+            var cep = "00000000";
+            var emptyJson = "";
 
-        // Assert
-        Assert.IsNull(result);
+            _httpMessageHandlerMock!
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(emptyJson, Encoding.UTF8, "application/json")
+                });
+
+            _jsonServiceMock!
+                .Setup(service => service.GetJsonStringFromHttpResponseAsync(It.IsAny<HttpResponseMessage>()))
+                .ThrowsAsync(new JsonServiceException("The response body is not a valid JSON string."));
+
+            // Act
+            var result = await _correiosApiService!.GetAddressByCepAsync(cep);
+
+            // Assert
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public async Task GetAddressByCepAsync_ReturnsNull_WhenDeserializationFails()
+        {
+            // Arrange
+            var cep = "00000000";
+            var jsonResponse = "{\"cep\":\"01001-000\",\"logradouro\":\"Praça da Sé\",\"bairro\":\"Sé\",\"localidade\":\"São Paulo\",\"estado\":\"São Paulo\"}";
+
+            _httpMessageHandlerMock!
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                });
+
+            _jsonServiceMock!
+                .Setup(service => service.GetJsonStringFromHttpResponseAsync(It.IsAny<HttpResponseMessage>()))
+                .ReturnsAsync(jsonResponse);
+
+            _jsonServiceMock
+                .Setup(service => service.GetJsonDocumentFromString(jsonResponse))
+                .Returns(JsonDocument.Parse(jsonResponse));
+
+            _jsonServiceMock
+                .Setup(service => service.DeserializeJsonElementAs<Address>(It.IsAny<JsonElement>()))
+                .Throws(new JsonServiceException("JSON deserialization failed."));
+
+            // Act
+            var result = await _correiosApiService!.GetAddressByCepAsync(cep);
+
+            // Assert
+            Assert.IsNull(result);
+        }
     }
 }
