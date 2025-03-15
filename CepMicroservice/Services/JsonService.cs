@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using CepMicroservice.Contracts.Services.Interfaces;
 using CepMicroservice.Exceptions;
 using Newtonsoft.Json.Linq;
