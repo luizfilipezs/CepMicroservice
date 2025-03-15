@@ -7,6 +7,7 @@ using Moq;
 namespace CepMicroservice.Tests.Controllers;
 
 [TestClass]
+[TestCategory("Unit")]
 public sealed class AddressControllerTests
 {
     [TestMethod]

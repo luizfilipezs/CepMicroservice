@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CepMicroservice.Tests.Services;
 
 [TestClass]
+[TestCategory("Unit")]
 public sealed class AddressServiceTests
 {
     [TestMethod]

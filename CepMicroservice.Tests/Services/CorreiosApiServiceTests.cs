@@ -7,6 +7,7 @@ using System.Net;
 namespace CepMicroservice.Tests.Services;
 
 [TestClass]
+[TestCategory("Unit")]
 public sealed class CorreiosApiServiceTests
 {
     [TestMethod]
