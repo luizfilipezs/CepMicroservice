@@ -1,4 +1,5 @@
-﻿using CepMicroservice.Contracts.Services.Interfaces;
+﻿using System.Text.Json;
+using CepMicroservice.Contracts.Services.Interfaces;
 using CepMicroservice.Models;
 
 namespace CepMicroservice.Services
@@ -16,9 +17,24 @@ namespace CepMicroservice.Services
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
-                return await response.Content.ReadFromJsonAsync<Address>();
+                var jsonString = await response.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrWhiteSpace(jsonString))
+                {
+                    throw new Exception("O conteúdo da resposta está vazio.");
+                }
+
+                using var jsonDocument = JsonDocument.Parse(jsonString);
+    
+                if (jsonDocument.RootElement.TryGetProperty("erro", out var errorProperty))
+                {
+                    var errorMessage = errorProperty.GetString();
+                    throw new Exception($"Erro no JSON: {errorMessage}");
+                }
+
+                return jsonDocument.RootElement.Deserialize<Address>();
             }
-            catch (HttpRequestException)
+            catch (Exception)
             {
                 return null;
             }
