@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<HttpClient>();
+builder.Services.AddScoped<IJsonService, JsonService>();
 builder.Services.AddScoped<ICorreiosApiService, CorreiosApiService>();
 builder.Services.AddScoped<IAdressService, AddressService>();
 
