@@ -9,8 +9,17 @@ builder.Services.AddScoped<HttpClient>();
 builder.Services.AddScoped<ICorreiosApiService, CorreiosApiService>();
 builder.Services.AddScoped<IAdressService, AddressService>();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=cepdb.sqlite"));
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseInMemoryDatabase("TestDatabase");
+    });
+}
+else
+{
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=cepdb.sqlite"));
+}
 
 builder.Services.AddControllers();
 
@@ -19,3 +28,5 @@ var app = builder.Build();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
