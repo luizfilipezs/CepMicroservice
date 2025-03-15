@@ -17,27 +17,32 @@ namespace CepMicroservice.Services
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
-                var jsonString = await response.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrWhiteSpace(jsonString))
-                {
-                    throw new Exception("O conteúdo da resposta está vazio.");
-                }
-
-                using var jsonDocument = JsonDocument.Parse(jsonString);
-    
-                if (jsonDocument.RootElement.TryGetProperty("erro", out var errorProperty))
-                {
-                    var errorMessage = errorProperty.GetString();
-                    throw new Exception($"Erro no JSON: {errorMessage}");
-                }
-
-                return jsonDocument.RootElement.Deserialize<Address>();
+                return await ParseJsonResponseAsync<Address>(response);
             }
             catch (Exception)
             {
                 return null;
             }
+        }
+
+        private static async Task<T> ParseJsonResponseAsync<T>(HttpResponseMessage response)
+        {
+            var jsonString = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(jsonString))
+            {
+                throw new Exception("O conteúdo da resposta está vazio.");
+            }
+
+            using var jsonDocument = JsonDocument.Parse(jsonString);
+
+            if (jsonDocument.RootElement.TryGetProperty("erro", out var errorProperty))
+            {
+                var errorMessage = errorProperty.GetString();
+                throw new Exception($"Erro no JSON: {errorMessage}");
+            }
+
+            return jsonDocument.RootElement.Deserialize<T>() ?? throw new Exception("O objeto deserializado é nulo.");
         }
     }
 }
