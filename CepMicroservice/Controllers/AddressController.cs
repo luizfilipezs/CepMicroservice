@@ -1,12 +1,12 @@
-﻿using CepMicroservice.Contracts.Services.Interfaces;
+﻿using CepMicroservice.Contracts.Controllers.Interfaces;
+using CepMicroservice.Contracts.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
 
 namespace CepMicroservice.Controllers
 {
     [ApiController]
     [Route("api/address")]
-    public class AddressController(IAdressService addressService, ICorreiosApiService correiosApiService) : ControllerBase
+    public class AddressController(IAdressService addressService, ICorreiosApiService correiosApiService) : ControllerBase, IAddressController
     {
         private readonly IAdressService _addressService = addressService;
         private readonly ICorreiosApiService _correiosApiService = correiosApiService;
