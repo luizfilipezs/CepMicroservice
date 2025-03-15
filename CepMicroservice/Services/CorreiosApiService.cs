@@ -42,7 +42,7 @@ namespace CepMicroservice.Services
                 throw new Exception($"Erro no JSON: {errorMessage}");
             }
 
-            return jsonDocument.RootElement.Deserialize<T>() ?? throw new Exception("O objeto deserializado é nulo.");
+            return jsonDocument.RootElement.Deserialize<T>() ?? throw new Exception("O objeto desserializado é nulo.");
         }
     }
 }
