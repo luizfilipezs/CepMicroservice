@@ -146,7 +146,7 @@ namespace CepMicroservice.Tests.Services
             Assert.IsTrue(exception.Message.Contains("JSON deserialization failed."));
         }
 
-        // Classe auxiliar para testes de desserialização
+        // Helper class for deserialization tests
         private class Person
         {
             [JsonPropertyName("name")]

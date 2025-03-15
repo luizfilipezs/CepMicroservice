@@ -22,16 +22,9 @@ namespace CepMicroservice.Tests.Services
         [TestInitialize]
         public void Initialize()
         {
-            // Configura o mock do HttpMessageHandler
             _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
-
-            // Cria um HttpClient com o HttpMessageHandler mockado
             _httpClient = new HttpClient(_httpMessageHandlerMock.Object);
-
-            // Configura o mock do IJsonService
             _jsonServiceMock = new Mock<IJsonService>();
-
-            // Cria a instância do CorreiosApiService com os mocks
             _correiosApiService = new CorreiosApiService(_httpClient, _jsonServiceMock.Object);
         }
 

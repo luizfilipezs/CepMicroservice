@@ -14,7 +14,8 @@ public sealed class AddressServiceTests
     {
         // Arrange
         var cep = "12345678";
-        var address = new Address {
+        var address = new Address
+        {
             Id = 1,
             Cep = cep,
             Logradouro = "Rua Teste",
@@ -81,7 +82,7 @@ public sealed class AddressServiceTests
             Estado = "SP"
         };
 
-        // Configura o DbContext com banco de dados em memória
+        // Configures the database context to use an in-memory database
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
