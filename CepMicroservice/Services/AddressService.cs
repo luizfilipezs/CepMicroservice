@@ -13,7 +13,7 @@ namespace CepMicroservice.Services
         public async Task<Address?> GetByCepAsync(string cep)
         {
             cep = SanitizeCep(cep);
-    
+
             return await _context.Addresses.FirstOrDefaultAsync(a => a.Cep == cep);
         }
 
