@@ -6,7 +6,10 @@ namespace CepMicroservice.Controllers
 {
     [ApiController]
     [Route("api/address")]
-    public class AddressController(IAdressService addressService, ICorreiosApiService correiosApiService) : ControllerBase, IAddressController
+    public class AddressController(
+        IAdressService addressService,
+        ICorreiosApiService correiosApiService
+    ) : ControllerBase, IAddressController
     {
         private readonly IAdressService _addressService = addressService;
         private readonly ICorreiosApiService _correiosApiService = correiosApiService;
