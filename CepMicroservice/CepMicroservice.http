@@ -1,6 +1,7 @@
 @CepMicroservice_HostAddress = http://localhost:5051
+@cep = 71010057
 
-GET {{CepMicroservice_HostAddress}}/weatherforecast/
+GET {{CepMicroservice_HostAddress}}/api/address/{{cep}}
 Accept: application/json
 
 ###
